@@ -114,7 +114,7 @@ def fetch_postgres_users():
     try:
         with psycopg2.connect(**DB_CONFIG) as conn:
             with conn.cursor() as cur:
-                cur.execute("SELECT username FROM pg_catalog.pg_user ORDER BY username;")
+                cur.execute("SELECT usename FROM pg_catalog.pg_user ORDER BY usename;")
                 users = [user[0][6:] if user[0].startswith('test') else user[0] for user in cur.fetchall() if user[0] not in DEFAULT_USERS]
                 logger.info(f"Fetched {len(users)} users from PostgreSQL")
                 return users
@@ -243,10 +243,10 @@ def main():
         print(report_content, file=output_stream)
         
         #Write report to file
-        with open("user_sync_report.txt", "w") as f:
+        with open("user_sync_report.html", "w") as f:
             f.write(report_content)
         
-        logger.info("Report generated successfully and written to user_sync_report.txt")
+        logger.info("Report generated successfully and written to user_sync_report.html")
         
     except requests.exceptions.RequestException as e:
         logger.error(f"Network error occurred: {str(e)}")
