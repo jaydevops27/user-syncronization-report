@@ -5,7 +5,7 @@ from tabulate import tabulate
 import psycopg2
 import logging
 import sys
-from datetime import import datetime
+from datetime import datetime
 from io import StringIO
 
 #logging
@@ -126,78 +126,63 @@ def fetch_postgres_users():
         return []
 
 def write_report(table_data, headers, summary_info, users_to_delete):
-    """Write a combined report with user comparison and summary in HTML format"""
+    """Write a combined report with user comparison and summary"""
     logger.info("Writing user synchronization report")
+    report = StringIO()
     
-    # Start HTML structure
-    report = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
-            .header { background-color: #0078d4; color: white; padding: 15px; border-radius: 5px; }
-            .summary { background-color: #f8f9fa; padding: 15px; margin: 15px 0; border-left: 4px solid #0078d4; }
-            table { border-collapse: collapse; width: 100%; margin: 15px 0; }
-            th { background-color: #0078d4; color: white; padding: 10px; text-align: left; }
-            td { padding: 8px; border-bottom: 1px solid #ddd; }
-            tr:nth-child(even) { background-color: #f9f9f9; }
-            .delete-section { background-color: #fff3cd; padding: 15px; margin: 15px 0; border-left: 4px solid #ffc107; }
-        </style>
-    </head>
-    <body>
-        <div class="header">
-            <h2>User Synchronization Report for QA TFB GHub Migration</h2>
-        </div>
-    """
+    # HTML Header with styling
+    report.write("""<!DOCTYPE html>
+<html><head><style>
+body{font-family:Arial,sans-serif;margin:20px;color:#333}
+.header{background:#0078d4;color:white;padding:15px;border-radius:5px}
+.summary{background:#f8f9fa;padding:15px;margin:15px 0;border-left:4px solid #0078d4}
+table{border-collapse:collapse;width:100%;margin:15px 0}
+th{background:#0078d4;color:white;padding:10px;text-align:left}
+td{padding:8px;border-bottom:1px solid #ddd}
+tr:nth-child(even){background:#f9f9f9}
+.delete{background:#fff3cd;padding:15px;margin:15px 0;border-left:4px solid #ffc107}
+</style></head><body>
+<div class="header"><h2>User Synchronization Report for QA TFB GHub Migration</h2></div>
+""")
     
-    # Add summary section
-    report += '<div class="summary"><h3>Summary</h3>'
+    # Write summary information
+    report.write('<div class="summary"><h3>Summary</h3>')
     for line in summary_info:
-        report += f'<p>{line}</p>'
-    report += '</div>'
+        report.write(f"<p>{line}</p>")
+    report.write('</div>')
     
-    # Add user comparison table
-    report += '<h3>User Comparison</h3>'
-    report += '<table>'
-    
-    # Table headers
-    report += '<tr>'
+    # Write user comparison table
+    report.write('<h3>User Comparison</h3><table>')
+    report.write('<tr>')
     for header in headers:
-        report += f'<th>{header}</th>'
-    report += '</tr>'
-    
-    # Table data
+        report.write(f'<th>{header}</th>')
+    report.write('</tr>')
     for row in table_data:
-        report += '<tr>'
+        report.write('<tr>')
         for cell in row:
-            report += f'<td>{cell}</td>'
-        report += '</tr>'
-    report += '</table>'
+            report.write(f'<td>{cell}</td>')
+        report.write('</tr>')
+    report.write('</table>')
     
-    # Add users to delete section
+    # Write users that need to be deleted
     if users_to_delete:
-        report += '<div class="delete-section">'
-        report += '<h3>Users that need to be deleted from RDS:</h3>'
+        report.write('<div class="delete"><h3>Users that need to be deleted from RDS:</h3>')
         for user in sorted(users_to_delete):
-            report += f'<p>• {user}</p>'
-        report += '</div>'
+            report.write(f"<p>- {user}</p>")
+        report.write('</div>')
     else:
-        report += '<div class="summary"><p><strong>No users need to be deleted from RDS.</strong></p></div>'
+        report.write('<div class="summary"><p>No users need to be deleted from RDS.</p></div>')
     
-    # Default users section
-    report += '<div class="summary">'
-    report += f'<h3>DEFAULT_USERS Count:</h3>'
-    report += f'<p><strong>Total DEFAULT_USERS: {len(DEFAULT_USERS)}</strong></p>'
+    # Printing Default
+    report.write('<div class="summary">')
+    report.write(f"<h3>DEFAULT_USERS Count:</h3>")
+    report.write(f"<p>Total DEFAULT_USERS: {len(DEFAULT_USERS)}</p>")
     for user in sorted(DEFAULT_USERS):
-        report += f'<p>• {user}</p>'
-    report += '</div>'
-    
-    # Close HTML
-    report += '</body></html>'
+        report.write(f"<p>- {user}</p>")
+    report.write('</div></body></html>')
     
     logger.info("Report written successfully")
-    return report
+    return report.getvalue()
 
 def main():
     try:
